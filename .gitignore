@@ -1,0 +1,5 @@
+# Runtime files — created by install.sh, not part of the repo
+state
+last.txt
+*.bak
+.DS_Store

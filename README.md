@@ -18,7 +18,7 @@ Claude Code hooks that speak responses and questions aloud using macOS text-to-s
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/tts-hooks.git
+git clone https://github.com/KUR3Kevin/tts-hooks.git
 cd tts-hooks
 ./install.sh
 ```

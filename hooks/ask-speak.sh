@@ -29,8 +29,11 @@ SPEAK_TEXT=$(echo "$HOOK_DATA" | jq -r '
 
 [[ -z "$SPEAK_TEXT" || "$SPEAK_TEXT" == "null" ]] && exit 0
 
-# Save for repeat
-echo "$SPEAK_TEXT" > "$LAST_FILE"
+# Truncate to 500 chars to prevent runaway speech
+SPEAK_TEXT="${SPEAK_TEXT:0:500}"
+
+# Save for repeat (strip any control characters before writing)
+printf '%s\n' "$SPEAK_TEXT" | tr -d '\000-\010\013-\037\177' > "$LAST_FILE"
 
 # Stop any current speech then speak
 pkill -f "^say " 2>/dev/null

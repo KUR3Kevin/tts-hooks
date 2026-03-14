@@ -2,13 +2,14 @@
 # stop-speak.sh — Claude Code Stop hook
 #
 # Reads the latest assistant response from the session transcript, strips
-# markdown formatting, and speaks it using macOS `say`. Polls up to 6
-# seconds for the transcript to be updated before reading.
+# markdown formatting, and speaks it using edge-tts (Andrew Neural voice).
+# Polls up to 6 seconds for the transcript to be updated before reading.
 #
 # Hook type:   Stop
-# Dependencies: jq, say (macOS built-in)
+# Dependencies: jq, edge-tts (pip install edge-tts), afplay (macOS built-in)
 # State file:  ~/.claude/tts/state  ("on" / "off")
 # Cache file:  ~/.claude/tts/last.txt  (used by repeat.sh)
+# Voice:       en-US-AndrewNeural (natural male)
 
 export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
 
@@ -76,6 +77,13 @@ SPEAK_TEXT=$(echo "$SPEAK_TEXT" \
 # Save for repeat
 echo "$SPEAK_TEXT" > "$LAST_FILE"
 
-pkill -f "^say " 2>/dev/null
-say "$SPEAK_TEXT" &
+pkill -x afplay 2>/dev/null
+pkill -f "edge-tts" 2>/dev/null
+
+TMP_MP3=$(mktemp /tmp/tts-XXXXXX.mp3)
+(
+  edge-tts --voice "en-US-AndrewNeural" --text "$SPEAK_TEXT" --write-media "$TMP_MP3" 2>/dev/null \
+    && afplay "$TMP_MP3"
+  rm -f "$TMP_MP3"
+) &
 disown

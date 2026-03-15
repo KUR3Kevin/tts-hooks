@@ -9,6 +9,8 @@
 # State file:  ~/.claude/tts/state  ("on" / "off")
 # Cache file:  ~/.claude/tts/last.txt  (used by repeat.sh)
 
+export PATH="/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin:$PATH"
+
 STATE_FILE="$HOME/.claude/tts/state"
 LAST_FILE="$HOME/.claude/tts/last.txt"
 

@@ -24,6 +24,11 @@ if ! command -v say >/dev/null 2>&1; then
   exit 1
 fi
 
+if ! command -v edge-tts >/dev/null 2>&1; then
+  echo "Error: edge-tts is required. Install it with: pip install edge-tts"
+  exit 1
+fi
+
 # --- Check for existing install ---
 if [[ -f "$TTS_DIR/stop-speak.sh" ]]; then
   echo "tts-hooks appears to already be installed at $TTS_DIR."
@@ -51,13 +56,13 @@ fi
 
 cp "$SETTINGS" "${SETTINGS}.bak"
 
-jq '
+jq --arg tts_dir "$TTS_DIR" '
   .hooks.UserPromptSubmit = (.hooks.UserPromptSubmit // []) +
     [{"hooks": [{"type": "command", "command": "bash ~/.claude/tts/prompt-hook.sh"}]}] |
   .hooks.PreToolUse = (.hooks.PreToolUse // []) +
-    [{"matcher": "AskUserQuestion", "hooks": [{"type": "command", "command": "'"$TTS_DIR"'/ask-speak.sh"}]}] |
+    [{"matcher": "AskUserQuestion", "hooks": [{"type": "command", "command": ($tts_dir + "/ask-speak.sh")}]}] |
   .hooks.Stop = (.hooks.Stop // []) +
-    [{"hooks": [{"type": "command", "command": "'"$TTS_DIR"'/stop-speak.sh"}]}]
+    [{"hooks": [{"type": "command", "command": ($tts_dir + "/stop-speak.sh")}]}]
 ' "$SETTINGS" > "${SETTINGS}.tmp" && mv "${SETTINGS}.tmp" "$SETTINGS"
 
 echo ""

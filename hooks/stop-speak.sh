@@ -82,8 +82,8 @@ pkill -f "edge-tts" 2>/dev/null
 
 TMP_MP3=$(mktemp /tmp/tts-XXXXXX.mp3)
 (
+  trap 'rm -f "$TMP_MP3"' EXIT
   edge-tts --voice "en-US-AndrewNeural" --text "$SPEAK_TEXT" --write-media "$TMP_MP3" 2>/dev/null \
     && afplay "$TMP_MP3"
-  rm -f "$TMP_MP3"
 ) &
 disown

@@ -11,9 +11,11 @@ Claude Code hooks that speak responses and questions aloud using macOS text-to-s
 
 ## Requirements
 
-- macOS (uses the built-in `say` command)
+- macOS
 - [Claude Code](https://claude.ai/code)
 - [`jq`](https://jqlang.github.io/jq/) — install with `brew install jq`
+- [`edge-tts`](https://github.com/rany2/edge-tts) — install with `pip install edge-tts`
+  (used by `stop-speak.sh` for high-quality neural TTS; `ask-speak.sh` and `toggle.sh` use the built-in `say`)
 
 ## Install
 

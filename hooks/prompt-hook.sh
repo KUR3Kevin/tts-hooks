@@ -19,14 +19,18 @@ if [[ -z "$PROMPT" ]]; then
   PROMPT=$(echo "$INPUT" | grep -o '"prompt":"[^"]*"' | sed 's/"prompt":"//;s/"//')
 fi
 
-if echo "$PROMPT" | grep -qF 'toggle.sh'; then
-  bash ~/.claude/tts/toggle.sh >&2
-  printf '{"decision":"block","reason":"TTS toggled"}'
-  exit 0
-fi
+PROMPT=$(printf '%s' "$PROMPT" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')
 
-if echo "$PROMPT" | grep -qiE '^repeat$|repeat\.sh'; then
-  bash ~/.claude/tts/repeat.sh >&2
-  printf '{"decision":"block","reason":"Repeating last TTS"}'
-  exit 0
-fi
+case "$PROMPT" in
+  toggle|toggle.sh)
+    bash ~/.claude/tts/toggle.sh >&2
+    printf '{"decision":"block","reason":"TTS toggled"}'
+    ;;
+  repeat|repeat.sh)
+    bash ~/.claude/tts/repeat.sh >&2
+    printf '{"decision":"block","reason":"Repeating last TTS"}'
+    ;;
+  *)
+    exit 0
+    ;;
+esac

@@ -35,29 +35,26 @@ get_last_text() {
   ' "$1" 2>/dev/null
 }
 
-# Record transcript size at hook start
-INITIAL_SIZE=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo 0)
+# Read immediately: Stop hooks normally run after the transcript is updated.
+PREV_TEXT=$(cat "$LAST_FILE" 2>/dev/null)
+SPEAK_TEXT=$(get_last_text "$TRANSCRIPT")
 
-# Wait up to 6s for transcript to grow (new response written), then read it
-SPEAK_TEXT=""
-for i in $(seq 1 12); do
-  sleep 0.5
-  CURRENT_SIZE=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo 0)
-  if [[ "$CURRENT_SIZE" -gt "$INITIAL_SIZE" ]]; then
-    SPEAK_TEXT=$(get_last_text "$TRANSCRIPT")
-    [[ -n "$SPEAK_TEXT" && "$SPEAK_TEXT" != "null" ]] && break
-  fi
-done
-
-# If transcript didn't grow, read whatever is there now
-if [[ -z "$SPEAK_TEXT" || "$SPEAK_TEXT" == "null" ]]; then
-  SPEAK_TEXT=$(get_last_text "$TRANSCRIPT")
+# If the transcript is late (or still contains the previous response), wait briefly.
+if [[ -z "$SPEAK_TEXT" || "$SPEAK_TEXT" == "null" || "$SPEAK_TEXT" == "$PREV_TEXT" ]]; then
+  INITIAL_SIZE=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo 0)
+  for _ in $(seq 1 12); do
+    sleep 0.5
+    CURRENT_SIZE=$(wc -c < "$TRANSCRIPT" 2>/dev/null || echo 0)
+    if [[ "$CURRENT_SIZE" -gt "$INITIAL_SIZE" ]]; then
+      SPEAK_TEXT=$(get_last_text "$TRANSCRIPT")
+      [[ -n "$SPEAK_TEXT" && "$SPEAK_TEXT" != "null" && "$SPEAK_TEXT" != "$PREV_TEXT" ]] && break
+    fi
+  done
 fi
 
 [[ -z "$SPEAK_TEXT" || "$SPEAK_TEXT" == "null" ]] && exit 0
 
 # Don't repeat the same text
-PREV_TEXT=$(cat "$LAST_FILE" 2>/dev/null)
 [[ "$SPEAK_TEXT" == "$PREV_TEXT" ]] && exit 0
 
 # Strip common markdown so it reads naturally
@@ -80,7 +77,7 @@ echo "$SPEAK_TEXT" > "$LAST_FILE"
 pkill -x afplay 2>/dev/null
 pkill -f "edge-tts" 2>/dev/null
 
-TMP_MP3=$(mktemp /tmp/tts-XXXXXX.mp3)
+TMP_MP3=$(mktemp "${TMPDIR:-/tmp}/tts.XXXXXX")
 (
   trap 'rm -f "$TMP_MP3"' EXIT
   edge-tts --voice "en-US-AndrewNeural" --text "$SPEAK_TEXT" --write-media "$TMP_MP3" 2>/dev/null \

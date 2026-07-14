@@ -13,23 +13,20 @@ if [[ -f "$SETTINGS" ]] && command -v jq >/dev/null 2>&1; then
   cp "$SETTINGS" "${SETTINGS}.bak"
 
   jq '
-    if .hooks.UserPromptSubmit then
-      .hooks.UserPromptSubmit = [
-        .hooks.UserPromptSubmit[] |
-        select(.hooks[].command | contains("tts/prompt-hook.sh") | not)
-      ]
+    if (.hooks.UserPromptSubmit | type) == "array" then
+      .hooks.UserPromptSubmit |= map(
+        select(any(.hooks[]?; (.command? // "") | contains("tts/prompt-hook.sh")) | not)
+      )
     else . end |
-    if .hooks.PreToolUse then
-      .hooks.PreToolUse = [
-        .hooks.PreToolUse[] |
-        select(.hooks[].command | contains("tts/ask-speak.sh") | not)
-      ]
+    if (.hooks.PreToolUse | type) == "array" then
+      .hooks.PreToolUse |= map(
+        select(any(.hooks[]?; (.command? // "") | contains("tts/ask-speak.sh")) | not)
+      )
     else . end |
-    if .hooks.Stop then
-      .hooks.Stop = [
-        .hooks.Stop[] |
-        select(.hooks[].command | contains("tts/stop-speak.sh") | not)
-      ]
+    if (.hooks.Stop | type) == "array" then
+      .hooks.Stop |= map(
+        select(any(.hooks[]?; (.command? // "") | contains("tts/stop-speak.sh")) | not)
+      )
     else . end
   ' "$SETTINGS" > "${SETTINGS}.tmp" && mv "${SETTINGS}.tmp" "$SETTINGS"
 
